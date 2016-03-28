@@ -1,5 +1,19 @@
 #pragma once
 
+class Handle
+{
+private:
+	HANDLE m_Handle;
+
+public:
+	Handle( HANDLE handle ) : m_Handle( handle ) { }
+
+	~Handle( )
+	{
+		CloseHandle( m_Handle );
+	}
+};
+
 namespace Utils
 {
 	class Process
@@ -8,11 +22,9 @@ namespace Utils
 		static HANDLE GetProcessHandle( const std::string& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+			Handle Safe( Snapshot );
 			if ( !Snapshot )
-			{
-				CloseHandle(Snapshot);
 				return NULL;
-			}
 
 			HANDLE ret = NULL;
 			DWORD PID = 0;
@@ -26,7 +38,6 @@ namespace Utils
 				{
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
-					CloseHandle(Snapshot);
 					return ret;
 				}
 			}
@@ -37,23 +48,19 @@ namespace Utils
 				{
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
-					CloseHandle(Snapshot);
 					return ret;
 				}
 			}
 
-			CloseHandle(Snapshot);
 			return NULL;
 		}
 
 		static DWORD GetPID( const std::string& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+			Handle Safe( Snapshot );
 			if ( !Snapshot )
-			{
-				CloseHandle(Snapshot);
 				return NULL;
-			}
 
 			HANDLE ret = NULL;
 			DWORD PID = 0;
@@ -66,7 +73,6 @@ namespace Utils
 				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
 				{
 					PID = curProcess.th32ProcessID;
-					CloseHandle(Snapshot);
 					return PID;
 				}
 			}
@@ -76,12 +82,10 @@ namespace Utils
 				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
 				{
 					PID = curProcess.th32ProcessID;
-					CloseHandle(Snapshot);
 					return PID;
 				}
 			}
 
-			CloseHandle(Snapshot);
 			return NULL;
 		}
 
@@ -93,21 +97,16 @@ namespace Utils
 			while ( true )
 			{
 				Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+				Handle Safe( Snapshot );
 				curProcess.dwSize = sizeof( PROCESSENTRY32 );
 
 				if ( Process32First( Snapshot, &curProcess ) )
 					if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
-					{
-						CloseHandle(Snapshot);
 						break;
-					}
 
 				while ( Process32Next( Snapshot, &curProcess ) )
 					if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
-					{
-						CloseHandle(Snapshot);
 						break;
-					}
 
 				Sleep( 100 );
 			}
@@ -116,11 +115,9 @@ namespace Utils
 		static DWORD_PTR ProcessBase( const std::string& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
+			Handle Safe( Snapshot );
 			if ( !Snapshot )
-			{
-				CloseHandle(Snapshot);
 				return NULL;
-			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -128,33 +125,24 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
-				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
-				}
 			}
 
-			CloseHandle(Snapshot);
 			return NULL;
 		}
 
 		static DWORD_PTR ProcessSize( const std::string& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
+			Handle Safe( Snapshot );
 			if ( !Snapshot )
-			{
-				CloseHandle(Snapshot);
 				return NULL;
-			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -162,19 +150,13 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
-				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
-				}
 			}
 
 			return NULL;
@@ -183,11 +165,9 @@ namespace Utils
 		static DWORD_PTR ModuleBase( const std::string& Process, const std::string& Module )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
+			Handle Safe( Snapshot );
 			if ( !Snapshot )
-			{
-				CloseHandle(Snapshot);
 				return NULL;
-			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -195,33 +175,24 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
-				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
-				}
 			}
 
-			CloseHandle(Snapshot);
 			return NULL;
 		}
 
 		static DWORD_PTR ModuleSize( const std::string& Process, const std::string& Module )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
+			Handle Safe( Snapshot );
 			if ( !Snapshot )
-			{
-				CloseHandle(Snapshot);
 				return NULL;
-			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -229,22 +200,15 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
-				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
-				{
-					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
-				}
 			}
 
-			CloseHandle(Snapshot);
 			return NULL;
 		}
 	};
@@ -377,9 +341,9 @@ namespace Utils
 	class Pattern
 	{
 	public:
-		#define INRANGE(x,a,b)		(x >= a && x <= b) 
-		#define getBits( x )		(INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
-		#define getByte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
+#define INRANGE(x,a,b)		(x >= a && x <= b) 
+#define getBits( x )		(INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
+#define getByte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
 
 		static DWORD_PTR CountBytes( const std::string& Pattern )
 		{
@@ -502,7 +466,7 @@ namespace Utils
 		// "A1 ? ? ? ? BF 5D B9 5C"
 		static DWORD_PTR Find_V2( const std::string& Module, const char* Pattern )
 		{
-			auto isMatch = [](const PBYTE addr, const PBYTE pat, const PBYTE msk) -> bool
+			auto isMatch = []( const PBYTE addr, const PBYTE pat, const PBYTE msk ) -> bool
 			{
 				size_t n = 0;
 				while ( addr[n] == pat[n] || msk[n] == ( BYTE )'?' )
@@ -618,7 +582,7 @@ namespace Utils
 
 			return NULL;
 		}
-		
+
 		// "\xA1\x00\x00\x00\x00\xBF\x5D\x89\x5C"
 		// x????xxxx
 		static DWORD_PTR FindExRegular( const std::string& Process, const std::string& Module, BYTE* Pattern, const char* Mask )
@@ -666,7 +630,7 @@ namespace Utils
 			std::cout << "\nIMAGE_DOS_HEADER: 0x" << std::hex << dwBase << std::endl;
 			std::cout << "IMAGE_NT_HEADERS: 0x" << std::hex << dwBase + Dos_Header->e_lfanew << std::endl;
 			std::cout << "SizeOfHeaders: 0x" << std::hex << pINH->OptionalHeader.SizeOfHeaders << std::endl << std::endl;
-			
+
 			std::cout << "Sections:\n";
 			auto pCurSection = ( IMAGE_SECTION_HEADER* )( dwBase + Dos_Header->e_lfanew + sizeof( IMAGE_NT_HEADERS ) );
 			for ( auto i( 0 ); i < pINH->FileHeader.NumberOfSections; ++i )
@@ -742,7 +706,7 @@ namespace Utils
 	class Allocator
 	{
 	public:
-		DWORD_PTR Allocate( size_t Size, DWORD Protection = PAGE_EXECUTE_READWRITE, DWORD_PTR PreferredLoc = NULL)
+		DWORD_PTR Allocate( size_t Size, DWORD Protection = PAGE_EXECUTE_READWRITE, DWORD_PTR PreferredLoc = NULL )
 		{
 			return ( DWORD_PTR )VirtualAlloc( ( LPVOID )PreferredLoc, Size, MEM_RESERVE | MEM_COMMIT, Protection );
 		}
