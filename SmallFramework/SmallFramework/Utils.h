@@ -9,7 +9,10 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 			if ( !Snapshot )
+			{
+				CloseHandle(Snapshot);
 				return NULL;
+			}
 
 			HANDLE ret = NULL;
 			DWORD PID = 0;
@@ -23,6 +26,7 @@ namespace Utils
 				{
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
+					CloseHandle(Snapshot);
 					return ret;
 				}
 			}
@@ -33,10 +37,12 @@ namespace Utils
 				{
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
+					CloseHandle(Snapshot);
 					return ret;
 				}
 			}
 
+			CloseHandle(Snapshot);
 			return NULL;
 		}
 
@@ -44,7 +50,10 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 			if ( !Snapshot )
+			{
+				CloseHandle(Snapshot);
 				return NULL;
+			}
 
 			HANDLE ret = NULL;
 			DWORD PID = 0;
@@ -57,6 +66,7 @@ namespace Utils
 				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
 				{
 					PID = curProcess.th32ProcessID;
+					CloseHandle(Snapshot);
 					return PID;
 				}
 			}
@@ -66,10 +76,12 @@ namespace Utils
 				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
 				{
 					PID = curProcess.th32ProcessID;
+					CloseHandle(Snapshot);
 					return PID;
 				}
 			}
 
+			CloseHandle(Snapshot);
 			return NULL;
 		}
 
@@ -85,11 +97,17 @@ namespace Utils
 
 				if ( Process32First( Snapshot, &curProcess ) )
 					if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
+					{
+						CloseHandle(Snapshot);
 						break;
+					}
 
 				while ( Process32Next( Snapshot, &curProcess ) )
 					if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
-						return;
+					{
+						CloseHandle(Snapshot);
+						break;
+					}
 
 				Sleep( 100 );
 			}
@@ -99,7 +117,10 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			if ( !Snapshot )
+			{
+				CloseHandle(Snapshot);
 				return NULL;
+			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -107,15 +128,22 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
+				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
+				}
 			}
 
+			CloseHandle(Snapshot);
 			return NULL;
 		}
 
@@ -123,7 +151,10 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			if ( !Snapshot )
+			{
+				CloseHandle(Snapshot);
 				return NULL;
+			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -131,13 +162,19 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
+				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
+				}
 			}
 
 			return NULL;
@@ -147,7 +184,10 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			if ( !Snapshot )
+			{
+				CloseHandle(Snapshot);
 				return NULL;
+			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -155,15 +195,22 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
+				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.modBaseAddr;
+				}
 			}
 
+			CloseHandle(Snapshot);
 			return NULL;
 		}
 
@@ -171,7 +218,10 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			if ( !Snapshot )
+			{
+				CloseHandle(Snapshot);
 				return NULL;
+			}
 
 			MODULEENTRY32 curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32 );
@@ -179,15 +229,22 @@ namespace Utils
 			if ( Module32First( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
+				}
 			}
 
 			while ( Module32Next( Snapshot, &curModule ) )
 			{
 				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
+				{
+					CloseHandle(Snapshot);
 					return ( DWORD_PTR )curModule.dwSize;
+				}
 			}
 
+			CloseHandle(Snapshot);
 			return NULL;
 		}
 	};
