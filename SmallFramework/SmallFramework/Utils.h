@@ -19,7 +19,7 @@ namespace Utils
 	class Process
 	{
 	public:
-		static HANDLE GetProcessHandle( const std::string& Process )
+		static HANDLE GetProcessHandle( const std::wstring& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 			Handle Safe( Snapshot );
@@ -29,12 +29,12 @@ namespace Utils
 			HANDLE ret = NULL;
 			DWORD PID = 0;
 
-			PROCESSENTRY32 curProcess;
-			curProcess.dwSize = sizeof( PROCESSENTRY32 );
+			PROCESSENTRY32W curProcess;
+			curProcess.dwSize = sizeof( PROCESSENTRY32W );
 
-			if ( Process32First( Snapshot, &curProcess ) )
+			if ( Process32FirstW( Snapshot, &curProcess ) )
 			{
-				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
+				if ( Process == curProcess.szExeFile )
 				{
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
@@ -42,9 +42,9 @@ namespace Utils
 				}
 			}
 
-			while ( Process32Next( Snapshot, &curProcess ) )
+			while ( Process32NextW( Snapshot, &curProcess ) )
 			{
-				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
+				if ( Process == curProcess.szExeFile )
 				{
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
@@ -55,7 +55,7 @@ namespace Utils
 			return NULL;
 		}
 
-		static DWORD GetPID( const std::string& Process )
+		static DWORD GetPID( const std::wstring& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 			Handle Safe( Snapshot );
@@ -65,21 +65,21 @@ namespace Utils
 			HANDLE ret = NULL;
 			DWORD PID = 0;
 
-			PROCESSENTRY32 curProcess;
-			curProcess.dwSize = sizeof( PROCESSENTRY32 );
+			PROCESSENTRY32W curProcess;
+			curProcess.dwSize = sizeof( PROCESSENTRY32W );
 
-			if ( Process32First( Snapshot, &curProcess ) )
+			if ( Process32FirstW( Snapshot, &curProcess ) )
 			{
-				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
+				if ( Process == curProcess.szExeFile )
 				{
 					PID = curProcess.th32ProcessID;
 					return PID;
 				}
 			}
 
-			while ( Process32Next( Snapshot, &curProcess ) )
+			while ( Process32NextW( Snapshot, &curProcess ) )
 			{
-				if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
+				if ( Process == curProcess.szExeFile )
 				{
 					PID = curProcess.th32ProcessID;
 					return PID;
@@ -89,123 +89,123 @@ namespace Utils
 			return NULL;
 		}
 
-		static void WaitForProcess( const std::string& Process )
+		static void WaitForProcess( const std::wstring& Process )
 		{
 			HANDLE Snapshot;
-			PROCESSENTRY32 curProcess;
+			PROCESSENTRY32W curProcess;
 
 			while ( true )
 			{
 				Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 				Handle Safe( Snapshot );
-				curProcess.dwSize = sizeof( PROCESSENTRY32 );
+				curProcess.dwSize = sizeof( PROCESSENTRY32W );
 
-				if ( Process32First( Snapshot, &curProcess ) )
-					if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
+				if ( Process32FirstW( Snapshot, &curProcess ) )
+					if ( Process == curProcess.szExeFile )
 						break;
 
-				while ( Process32Next( Snapshot, &curProcess ) )
-					if ( !_stricmp( Process.c_str( ), curProcess.szExeFile ) )
+				while ( Process32NextW( Snapshot, &curProcess ) )
+					if ( Process == curProcess.szExeFile )
 						break;
 
 				Sleep( 100 );
 			}
 		}
 
-		static DWORD_PTR ProcessBase( const std::string& Process )
+		static DWORD_PTR ProcessBase( const std::wstring& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			Handle Safe( Snapshot );
 			if ( !Snapshot )
 				return NULL;
 
-			MODULEENTRY32 curModule;
-			curModule.dwSize = sizeof( MODULEENTRY32 );
+			MODULEENTRY32W curModule;
+			curModule.dwSize = sizeof( MODULEENTRY32W );
 
-			if ( Module32First( Snapshot, &curModule ) )
+			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
-				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
+				if ( Process == curModule.szModule )
 					return ( DWORD_PTR )curModule.modBaseAddr;
 			}
 
-			while ( Module32Next( Snapshot, &curModule ) )
+			while ( Module32NextW( Snapshot, &curModule ) )
 			{
-				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
-					return ( DWORD_PTR )curModule.modBaseAddr;
-			}
-
-			return NULL;
-		}
-
-		static DWORD_PTR ProcessSize( const std::string& Process )
-		{
-			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
-			Handle Safe( Snapshot );
-			if ( !Snapshot )
-				return NULL;
-
-			MODULEENTRY32 curModule;
-			curModule.dwSize = sizeof( MODULEENTRY32 );
-
-			if ( Module32First( Snapshot, &curModule ) )
-			{
-				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
-					return ( DWORD_PTR )curModule.dwSize;
-			}
-
-			while ( Module32Next( Snapshot, &curModule ) )
-			{
-				if ( !stricmp( Process.c_str( ), curModule.szModule ) )
-					return ( DWORD_PTR )curModule.dwSize;
-			}
-
-			return NULL;
-		}
-
-		static DWORD_PTR ModuleBase( const std::string& Process, const std::string& Module )
-		{
-			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
-			Handle Safe( Snapshot );
-			if ( !Snapshot )
-				return NULL;
-
-			MODULEENTRY32 curModule;
-			curModule.dwSize = sizeof( MODULEENTRY32 );
-
-			if ( Module32First( Snapshot, &curModule ) )
-			{
-				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
-					return ( DWORD_PTR )curModule.modBaseAddr;
-			}
-
-			while ( Module32Next( Snapshot, &curModule ) )
-			{
-				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
+				if ( Process == curModule.szModule )
 					return ( DWORD_PTR )curModule.modBaseAddr;
 			}
 
 			return NULL;
 		}
 
-		static DWORD_PTR ModuleSize( const std::string& Process, const std::string& Module )
+		static DWORD_PTR ProcessSize( const std::wstring& Process )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			Handle Safe( Snapshot );
 			if ( !Snapshot )
 				return NULL;
 
-			MODULEENTRY32 curModule;
-			curModule.dwSize = sizeof( MODULEENTRY32 );
+			MODULEENTRY32W curModule;
+			curModule.dwSize = sizeof( MODULEENTRY32W );
 
-			if ( Module32First( Snapshot, &curModule ) )
+			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
-				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
+				if ( Process == curModule.szModule )
 					return ( DWORD_PTR )curModule.dwSize;
 			}
 
-			while ( Module32Next( Snapshot, &curModule ) )
+			while ( Module32NextW( Snapshot, &curModule ) )
 			{
-				if ( !stricmp( Module.c_str( ), curModule.szModule ) )
+				if ( Process == curModule.szModule )
+					return ( DWORD_PTR )curModule.dwSize;
+			}
+
+			return NULL;
+		}
+
+		static DWORD_PTR ModuleBase( const std::wstring& Process, const std::wstring& Module )
+		{
+			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
+			Handle Safe( Snapshot );
+			if ( !Snapshot )
+				return NULL;
+
+			MODULEENTRY32W curModule;
+			curModule.dwSize = sizeof( MODULEENTRY32W );
+
+			if ( Module32FirstW( Snapshot, &curModule ) )
+			{
+				if ( Module == curModule.szModule )
+					return ( DWORD_PTR )curModule.modBaseAddr;
+			}
+
+			while ( Module32NextW( Snapshot, &curModule ) )
+			{
+				if ( Module == curModule.szModule )
+					return ( DWORD_PTR )curModule.modBaseAddr;
+			}
+
+			return NULL;
+		}
+
+		static DWORD_PTR ModuleSize( const std::wstring& Process, const std::wstring& Module )
+		{
+			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
+			Handle Safe( Snapshot );
+			if ( !Snapshot )
+				return NULL;
+
+			MODULEENTRY32W curModule;
+			curModule.dwSize = sizeof( MODULEENTRY32W );
+
+			if ( Module32FirstW( Snapshot, &curModule ) )
+			{
+				if ( Module == curModule.szModule )
+					return ( DWORD_PTR )curModule.dwSize;
+			}
+
+			while ( Module32NextW( Snapshot, &curModule ) )
+			{
+				if ( Module == curModule.szModule )
 					return ( DWORD_PTR )curModule.dwSize;
 			}
 
