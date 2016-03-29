@@ -32,7 +32,7 @@ namespace Utils
 			PROCESSENTRY32W curProcess;
 			curProcess.dwSize = sizeof( PROCESSENTRY32W );
 
-			std::vector<HANDLE> results;
+			HANDLE result = INVALID_HANDLE_VALUE;
 
 			if ( Process32FirstW( Snapshot, &curProcess ) )
 			{
@@ -41,7 +41,7 @@ namespace Utils
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( flags, FALSE, PID );
 					//return ret;
-					results.push_back( ret );
+					result = ret;
 				}
 			}
 
@@ -52,14 +52,11 @@ namespace Utils
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
 					//return ret;
-					results.push_back( ret );
+					result = ret;
 				}
 			}
 
-			if ( results.size( ) > 0 )
-				return results[results.size( ) - 1];
-
-			return NULL;
+			return result;
 		}
 
 		static DWORD GetPID( const std::wstring& Process )
@@ -75,7 +72,7 @@ namespace Utils
 			PROCESSENTRY32W curProcess;
 			curProcess.dwSize = sizeof( PROCESSENTRY32W );
 
-			std::vector<DWORD> results;
+			DWORD result = 0;
 
 			if ( Process32FirstW( Snapshot, &curProcess ) )
 			{
@@ -83,7 +80,7 @@ namespace Utils
 				{
 					PID = curProcess.th32ProcessID;
 					//return PID;
-					results.push_back( PID );
+					result = PID;
 				}
 			}
 
@@ -93,14 +90,11 @@ namespace Utils
 				{
 					PID = curProcess.th32ProcessID;
 					//return PID;
-					results.push_back( PID );
+					result = PID;
 				}
 			}
 
-			if ( results.size( ) != 0 && results.size( ) > 0 )
-				return results[results.size( ) - 1];
-
-			return NULL;
+			return result;
 		}
 
 		static void WaitForProcess( const std::wstring& Process )
@@ -136,24 +130,21 @@ namespace Utils
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
-			std::vector<DWORD_PTR> results;
+			DWORD_PTR result;
 
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
+					result = ( DWORD_PTR )curModule.modBaseAddr;
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
+					result = ( DWORD_PTR )curModule.modBaseAddr;
 			}
 
-			if ( results.size( ) > 0 )
-				return results[results.size( ) - 1];
-
-			return NULL;
+			return result;
 		}
 
 		static DWORD_PTR ProcessSize( const std::wstring& Process )
@@ -166,24 +157,21 @@ namespace Utils
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
-			std::vector<DWORD_PTR> results;
+			DWORD_PTR result = NULL;
 
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.dwSize );
+					result = curModule.dwSize;
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.dwSize );
+					result = curModule.dwSize;
 			}
 
-			if ( results.size( ) > 0 )
-				return results[results.size( ) - 1];
-
-			return NULL;
+			return result;
 		}
 
 		static DWORD_PTR ModuleBase( const std::wstring& Process, const std::wstring& Module )
@@ -196,24 +184,21 @@ namespace Utils
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
-			std::vector<DWORD_PTR> results;
+			DWORD_PTR result = NULL;
 
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
+					result = ( DWORD_PTR )curModule.modBaseAddr;
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
+					result = ( DWORD_PTR )curModule.modBaseAddr;
 			}
 
-			if ( results.size( ) > 0 )
-				return results[results.size( ) - 1];
-
-			return NULL;
+			return result;
 		}
 
 		static DWORD_PTR ModuleSize( const std::wstring& Process, const std::wstring& Module )
@@ -226,24 +211,21 @@ namespace Utils
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
-			std::vector<DWORD_PTR> results;
+			DWORD_PTR result = NULL;
 
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.dwSize );
+					result = curModule.dwSize;
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					results.push_back( ( DWORD_PTR )curModule.dwSize );
+					result = curModule.dwSize;
 			}
 
-			if ( results.size( ) > 0 )
-				return results[results.size( ) - 1];
-
-			return NULL;
+			return result;
 		}
 	};
 
@@ -321,9 +303,9 @@ namespace Utils
 	class Pattern
 	{
 	public:
-#define INRANGE(x,a,b)		(x >= a && x <= b) 
-#define getBits( x )		(INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
-#define getByte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
+		#define INRANGE(x,a,b)		(x >= a && x <= b) 
+		#define getBits( x )		(INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
+		#define getByte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
 
 		static DWORD_PTR CountBytes( const std::string& Pattern )
 		{
