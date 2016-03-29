@@ -308,13 +308,13 @@ namespace Utils
 		template <typename T>
 		static bool Write( const std::wstring& Process, const DWORD_PTR Address, T Value )
 		{
-			return WriteProcessMemory( Process::GetProcessHandle( Process ), Address, &Value, sizeof( T ), nullptr );
+			return !!WriteProcessMemory( Process::GetProcessHandle( Process ), Address, &Value, sizeof( T ), nullptr );
 		}
 
 		template <typename T>
 		static bool Write( HANDLE Process, const DWORD_PTR Address, T Value )
 		{
-			return WriteProcessMemory( Process, Address, &Value, sizeof( T ), nullptr );
+			return !!WriteProcessMemory( Process, Address, &Value, sizeof( T ), nullptr );
 		}
 	};
 
