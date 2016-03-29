@@ -19,11 +19,11 @@ namespace Utils
 	class Process
 	{
 	public:
-		static HANDLE GetProcessHandle( const std::wstring& Process )
+		static HANDLE GetProcessHandle( const std::wstring& Process, DWORD flags = PROCESS_ALL_ACCESS )
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 			Handle Safe( Snapshot );
-			if ( !Snapshot )
+			if ( !Snapshot || Snapshot == INVALID_HANDLE_VALUE )
 				return NULL;
 
 			HANDLE ret = NULL;
@@ -32,13 +32,16 @@ namespace Utils
 			PROCESSENTRY32W curProcess;
 			curProcess.dwSize = sizeof( PROCESSENTRY32W );
 
+			std::vector<HANDLE> results;
+
 			if ( Process32FirstW( Snapshot, &curProcess ) )
 			{
 				if ( Process == curProcess.szExeFile )
 				{
 					PID = curProcess.th32ProcessID;
-					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
-					return ret;
+					ret = OpenProcess( flags, FALSE, PID );
+					//return ret;
+					results.push_back( ret );
 				}
 			}
 
@@ -48,9 +51,13 @@ namespace Utils
 				{
 					PID = curProcess.th32ProcessID;
 					ret = OpenProcess( PROCESS_ALL_ACCESS, FALSE, PID );
-					return ret;
+					//return ret;
+					results.push_back( ret );
 				}
 			}
+
+			if ( results.size( ) > 0 )
+				return results[results.size( ) - 1];
 
 			return NULL;
 		}
@@ -59,7 +66,7 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 			Handle Safe( Snapshot );
-			if ( !Snapshot )
+			if ( !Snapshot || Snapshot == INVALID_HANDLE_VALUE )
 				return NULL;
 
 			HANDLE ret = NULL;
@@ -68,12 +75,15 @@ namespace Utils
 			PROCESSENTRY32W curProcess;
 			curProcess.dwSize = sizeof( PROCESSENTRY32W );
 
+			std::vector<DWORD> results;
+
 			if ( Process32FirstW( Snapshot, &curProcess ) )
 			{
 				if ( Process == curProcess.szExeFile )
 				{
 					PID = curProcess.th32ProcessID;
-					return PID;
+					//return PID;
+					results.push_back( PID );
 				}
 			}
 
@@ -82,9 +92,13 @@ namespace Utils
 				if ( Process == curProcess.szExeFile )
 				{
 					PID = curProcess.th32ProcessID;
-					return PID;
+					//return PID;
+					results.push_back( PID );
 				}
 			}
+
+			if ( results.size( ) != 0 && results.size( ) > 0 )
+				return results[results.size( ) - 1];
 
 			return NULL;
 		}
@@ -116,23 +130,28 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			Handle Safe( Snapshot );
-			if ( !Snapshot )
+			if ( !Snapshot || Snapshot == INVALID_HANDLE_VALUE )
 				return NULL;
 
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
+			std::vector<DWORD_PTR> results;
+
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					return ( DWORD_PTR )curModule.modBaseAddr;
+					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					return ( DWORD_PTR )curModule.modBaseAddr;
+					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
 			}
+
+			if ( results.size( ) > 0 )
+				return results[results.size( ) - 1];
 
 			return NULL;
 		}
@@ -141,23 +160,28 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			Handle Safe( Snapshot );
-			if ( !Snapshot )
+			if ( !Snapshot || Snapshot == INVALID_HANDLE_VALUE )
 				return NULL;
 
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
+			std::vector<DWORD_PTR> results;
+
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					return ( DWORD_PTR )curModule.dwSize;
+					results.push_back( ( DWORD_PTR )curModule.dwSize );
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Process == curModule.szModule )
-					return ( DWORD_PTR )curModule.dwSize;
+					results.push_back( ( DWORD_PTR )curModule.dwSize );
 			}
+
+			if ( results.size( ) > 0 )
+				return results[results.size( ) - 1];
 
 			return NULL;
 		}
@@ -166,23 +190,28 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			Handle Safe( Snapshot );
-			if ( !Snapshot )
+			if ( !Snapshot || Snapshot == INVALID_HANDLE_VALUE )
 				return NULL;
 
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
+			std::vector<DWORD_PTR> results;
+
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					return ( DWORD_PTR )curModule.modBaseAddr;
+					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					return ( DWORD_PTR )curModule.modBaseAddr;
+					results.push_back( ( DWORD_PTR )curModule.modBaseAddr );
 			}
+
+			if ( results.size( ) > 0 )
+				return results[results.size( ) - 1];
 
 			return NULL;
 		}
@@ -191,23 +220,28 @@ namespace Utils
 		{
 			HANDLE Snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, GetPID( Process ) );
 			Handle Safe( Snapshot );
-			if ( !Snapshot )
+			if ( !Snapshot || Snapshot == INVALID_HANDLE_VALUE )
 				return NULL;
 
 			MODULEENTRY32W curModule;
 			curModule.dwSize = sizeof( MODULEENTRY32W );
 
+			std::vector<DWORD_PTR> results;
+
 			if ( Module32FirstW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					return ( DWORD_PTR )curModule.dwSize;
+					results.push_back( ( DWORD_PTR )curModule.dwSize );
 			}
 
 			while ( Module32NextW( Snapshot, &curModule ) )
 			{
 				if ( Module == curModule.szModule )
-					return ( DWORD_PTR )curModule.dwSize;
+					results.push_back( ( DWORD_PTR )curModule.dwSize );
 			}
+
+			if ( results.size( ) > 0 )
+				return results[results.size( ) - 1];
 
 			return NULL;
 		}
@@ -215,9 +249,12 @@ namespace Utils
 
 	class Memory
 	{
+		//Removed Read-/WriteProtected because RPM
+		//and WPM already deals with protection
+
 	public:
 		template <typename T>
-		static T Read( const std::string& Process, const DWORD_PTR Address )
+		static T Read( const std::wstring& Process, const DWORD_PTR Address )
 		{
 			T ret;
 			if ( !ReadProcessMemory( Process::GetProcessHandle( Process ), ( LPCVOID )Address, &ret, sizeof( T ), nullptr ) )
@@ -226,12 +263,19 @@ namespace Utils
 		}
 
 		template <typename T>
-		static T* ReadStruct( const std::string& Process, const DWORD_PTR Address )
+		static T* ReadStruct( const std::wstring& Process, const DWORD_PTR Address )
 		{
 			T ret;
 			if ( !ReadProcessMemory( Process::GetProcessHandle( Process ), ( LPCVOID )Address, &ret, sizeof( T ), nullptr ) )
 				return NULL;
 			return &ret;
+		}
+
+		// ReactiioN
+		template <typename T>
+		static bool ReadStruct( const std::wstring& Process, const DWORD_PTR Address, T& data )
+		{
+			return !!ReadProcessMemory( Process::GetProcessHandle( Process ), ( LPCVOID )Address, &data, sizeof( T ), nullptr );
 		}
 
 		template <typename T>
@@ -253,41 +297,7 @@ namespace Utils
 		}
 
 		template <typename T>
-		static T ReadProtected( HANDLE Process, const DWORD_PTR Address )
-		{
-			T ret;
-			DWORD dwOld;
-
-			if ( !VirtualProtect( Address, sizeof( T ), PAGE_EXECUTE_READWRITE, &dwOld ) )
-				return 1337;
-
-			if ( !ReadProcessMemory( Process, Address, &ret, sizeof( T ), nullptr ) )
-				return NULL;
-
-			VirtualProtect( Address, sizeof( T ), dwOld, &dwOld );
-
-			return ret;
-		}
-
-		template <typename T>
-		static T ReadProtected( const std::string& Process, const DWORD_PTR Address )
-		{
-			T ret;
-			DWORD dwOld;
-
-			if ( !VirtualProtect( Address, sizeof( T ), PAGE_EXECUTE_READWRITE, &dwOld ) )
-				return 1337;
-
-			if ( !ReadProcessMemory( Process::GetProcessHandle( Process ), Address, &ret, sizeof( T ), nullptr ) )
-				return NULL;
-
-			VirtualProtect( Address, sizeof( T ), dwOld, &dwOld );
-
-			return ret;
-		}
-
-		template <typename T>
-		static T* ReadArray( const std::string& Process, const DWORD_PTR Address, size_t Length )
+		static T* ReadArray( const std::wstring& Process, const DWORD_PTR Address, size_t Length )
 		{
 			T* buffer = new buffer[Length];
 			ReadProcessMemory( Process::GetProcessHandle( Process ), ( LPCVOID )Address, buffer, Length, nullptr );
@@ -296,7 +306,7 @@ namespace Utils
 
 
 		template <typename T>
-		static bool Write( const std::string& Process, const DWORD_PTR Address, T Value )
+		static bool Write( const std::wstring& Process, const DWORD_PTR Address, T Value )
 		{
 			return WriteProcessMemory( Process::GetProcessHandle( Process ), Address, &Value, sizeof( T ), nullptr );
 		}
@@ -305,36 +315,6 @@ namespace Utils
 		static bool Write( HANDLE Process, const DWORD_PTR Address, T Value )
 		{
 			return WriteProcessMemory( Process, Address, &Value, sizeof( T ), nullptr );
-		}
-
-		template <typename T>
-		static bool WriteProtected( const std::string& Process, const DWORD_PTR Address, T Value )
-		{
-			DWORD dwOld;
-			if ( !VirtualProtect( Address, sizeof( T ), PAGE_EXECUTE_READWRITE, &dwOld ) )
-				return false;
-
-			if ( !WriteProcessMemory( Process::GetProcessHandle( Process ), Address, &Value, sizeof( T ), nullptr ) )
-				return false;
-
-			VirtualProtect( Address, sizeof( T ), dwOld, &dwOld );
-
-			return true;
-		}
-
-		template <typename T>
-		static bool WriteProtected( HANDLE Process, const DWORD_PTR Address, T Value )
-		{
-			DWORD dwOld;
-			if ( !VirtualProtect( Address, sizeof( T ), PAGE_EXECUTE_READWRITE, &dwOld ) )
-				return false;
-
-			if ( !WriteProcessMemory( Process, Address, &Value, sizeof( T ), nullptr ) )
-				return false;
-
-			VirtualProtect( Address, sizeof( T ), dwOld, &dwOld );
-
-			return true;
 		}
 	};
 
@@ -414,7 +394,7 @@ namespace Utils
 		}
 
 		// "A1 ? ? ? ? BF 5D B9 5C"
-		static DWORD_PTR FindEx( const std::string& Process, const std::string& Module, const char* Pattern )
+		static DWORD_PTR FindEx( const std::wstring& Process, const std::wstring& Module, const char* Pattern )
 		{
 			DWORD_PTR Base = Process::ModuleBase( Process, Module );
 			size_t Size = Process::ModuleSize( Process, Module );
@@ -585,7 +565,7 @@ namespace Utils
 
 		// "\xA1\x00\x00\x00\x00\xBF\x5D\x89\x5C"
 		// x????xxxx
-		static DWORD_PTR FindExRegular( const std::string& Process, const std::string& Module, BYTE* Pattern, const char* Mask )
+		static DWORD_PTR FindExRegular( const std::wstring& Process, const std::wstring& Module, BYTE* Pattern, const char* Mask )
 		{
 			DWORD_PTR Base = Process::ModuleBase( Process, Module );
 			size_t Size = Process::ModuleSize( Process, Module );
@@ -621,7 +601,7 @@ namespace Utils
 	class Misc
 	{
 	public:
-		static bool EraseHeaders( const std::string& Process )
+		static bool EraseHeaders( const std::wstring& Process )
 		{
 			DWORD dwBase = Process::ProcessBase( Process );
 			PIMAGE_DOS_HEADER Dos_Header = Memory::ReadStruct<IMAGE_DOS_HEADER>( Process, Process::ProcessBase( Process ) );
@@ -648,25 +628,25 @@ namespace Utils
 		class Internals
 		{
 		public:
-			static IMAGE_DOS_HEADER* GetDOSHeader( const std::string& Process )
+			static IMAGE_DOS_HEADER* GetDOSHeader( const std::wstring& Process )
 			{
 				IMAGE_DOS_HEADER* ret = Memory::ReadStruct<IMAGE_DOS_HEADER>( Process, Process::ProcessBase( Process ) );
 				return ret;
 			}
 
-			static IMAGE_NT_HEADERS* GetNTHeaders( const std::string& Process )
+			static IMAGE_NT_HEADERS* GetNTHeaders( const std::wstring& Process )
 			{
 				IMAGE_NT_HEADERS* ret = Memory::ReadStruct<IMAGE_NT_HEADERS>( Process, Process::ProcessBase( Process ) + GetDOSHeader( Process )->e_lfanew );
 				return ret;
 			}
 
-			static DWORD_PTR GetSectionVA( const std::string& Process, const std::string& Section )
+			static DWORD_PTR GetSectionVA( const std::wstring& Process, const std::wstring& Section )
 			{
 				auto SectionIt = ( IMAGE_SECTION_HEADER* )( Process::ProcessBase( Process ) + GetDOSHeader( Process )->e_lfanew + sizeof( IMAGE_NT_HEADERS ) );
 				for ( auto i( 0 ); i < GetNTHeaders( Process )->FileHeader.NumberOfSections; ++i )
 				{
 					IMAGE_SECTION_HEADER* SectionStruct = Memory::ReadStruct<IMAGE_SECTION_HEADER>( Process, ( DWORD_PTR )SectionIt );
-					if ( !stricmp( Section.c_str( ), ( const char* )SectionStruct->Name ) )
+					if ( Section == ( const wchar_t* )SectionStruct->Name )
 						return SectionStruct->VirtualAddress + Process::ProcessBase( Process );
 
 					++SectionIt;
@@ -711,7 +691,7 @@ namespace Utils
 			return ( DWORD_PTR )VirtualAlloc( ( LPVOID )PreferredLoc, Size, MEM_RESERVE | MEM_COMMIT, Protection );
 		}
 
-		DWORD_PTR AllocateEx( const std::string& Process, size_t Size, DWORD Protection = PAGE_EXECUTE_READWRITE, DWORD_PTR PreferredLoc = NULL )
+		DWORD_PTR AllocateEx( const std::wstring& Process, size_t Size, DWORD Protection = PAGE_EXECUTE_READWRITE, DWORD_PTR PreferredLoc = NULL )
 		{
 			return ( DWORD_PTR )VirtualAllocEx( Process::GetProcessHandle( Process ), ( LPVOID )PreferredLoc, Size, MEM_RESERVE | MEM_COMMIT, Protection );
 		}
