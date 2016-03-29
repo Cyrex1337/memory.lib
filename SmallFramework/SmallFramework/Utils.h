@@ -6,7 +6,17 @@ private:
 	HANDLE m_Handle;
 
 public:
+	Handle( ) : m_Handle( NULL ) { }
+
 	Handle( HANDLE handle ) : m_Handle( handle ) { }
+
+	Handle( const Handle& handle ) : m_Handle( handle.m_Handle ) { }
+
+	Handle( Handle&& other ) : m_Handle( NULL )
+	{
+		m_Handle = other.m_Handle;
+		other.m_Handle = NULL;
+	}
 
 	~Handle( )
 	{
